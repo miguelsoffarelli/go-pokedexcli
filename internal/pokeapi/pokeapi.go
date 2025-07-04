@@ -2,55 +2,52 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-
-	pokecache "github.com/miguelsoffarelli/go-pokedexcli/internal/pokecache"
 )
 
-func FetchLocationArea(url string, cache *pokecache.Cache) (Location, error) {
-	var data Location
-	// First check for the requested data in the cache
-	rawData, ok := cache.Get(url)
-	if ok {
-		err := json.Unmarshal(rawData, &data)
+const (
+	baseURL = "https://pokeapi.co/api/v2"
+)
+
+func (c *Client) ListLocations(pageURL *string) (Location, error) {
+	url := baseURL + "/location-area"
+	if pageURL != nil {
+		url = *pageURL
+	}
+
+	if val, ok := c.cache.Get(url); ok {
+		locationsResp := Location{}
+		err := json.Unmarshal(val, &locationsResp)
 		if err != nil {
 			return Location{}, err
 		}
-		return data, nil
+
+		return locationsResp, nil
 	}
-	// If the requested data is not in the cache, proceed with the api call
-	res, err := http.Get(url)
+
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return Location{}, err
 	}
 
-	body, err := io.ReadAll(res.Body)
-	defer res.Body.Close()
-	if res.StatusCode > 299 {
-		return Location{}, fmt.Errorf("response failed with status code %v", res.StatusCode)
-	}
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return Location{}, err
 	}
-	// Save the retrieved data in the cache
-	cache.Add(url, body)
+	defer resp.Body.Close()
 
-	err = json.Unmarshal(body, &data)
+	dat, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return Location{}, err
 	}
 
-	return data, nil
-}
+	locationsResp := Location{}
+	err = json.Unmarshal(dat, &locationsResp)
+	if err != nil {
+		return Location{}, err
+	}
 
-type Location struct {
-	Count    int     `json:"count"`
-	Next     string  `json:"next"`
-	Previous *string `json:"previous"`
-	Results  []struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"results"`
+	c.cache.Add(url, dat)
+	return locationsResp, nil
 }

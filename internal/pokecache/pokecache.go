@@ -8,7 +8,7 @@ import (
 
 type Cache struct {
 	entries map[string]cacheEntry
-	mu      sync.Mutex
+	mu      *sync.Mutex
 }
 
 type cacheEntry struct {
@@ -21,7 +21,7 @@ func (c *Cache) Add(key string, val []byte) error {
 	defer c.mu.Unlock()
 
 	entry := cacheEntry{
-		createdAt: time.Now(),
+		createdAt: time.Now().UTC(),
 		val:       val,
 	}
 
@@ -60,14 +60,15 @@ func (c *Cache) reapLoop(interval time.Duration) {
 	}
 }
 
-func NewCache(interval time.Duration) *Cache {
+func NewCache(interval time.Duration) Cache {
 	if interval == 0 {
 		fmt.Printf("interval must be positive, got %v", interval)
-		return &Cache{}
+		return Cache{}
 	}
 
-	cache := &Cache{
+	cache := Cache{
 		entries: make(map[string]cacheEntry),
+		mu:      &sync.Mutex{},
 	}
 
 	go cache.reapLoop(interval)
