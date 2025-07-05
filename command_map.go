@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func commandMapf(cfg *Config, _ ...string) error {
+func commandMapf(cfg *Config, args ...string) error {
 	locationsResp, err := cfg.pokeapiClient.ListLocations(cfg.next)
 	if err != nil {
 		return err

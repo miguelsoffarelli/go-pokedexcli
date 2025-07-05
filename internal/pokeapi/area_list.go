@@ -2,8 +2,6 @@ package pokeapi
 
 import (
 	"encoding/json"
-	"io"
-	"net/http"
 )
 
 func (c *Client) ListArea(areaURL *string) (Area, error) {
@@ -17,18 +15,7 @@ func (c *Client) ListArea(areaURL *string) (Area, error) {
 		return areaResp, nil
 	}
 
-	req, err := http.NewRequest("GET", *areaURL, nil)
-	if err != nil {
-		return Area{}, err
-	}
-
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return Area{}, err
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
+	data, err := c.FetchApiData(areaURL)
 	if err != nil {
 		return Area{}, err
 	}
@@ -39,6 +26,5 @@ func (c *Client) ListArea(areaURL *string) (Area, error) {
 		return Area{}, err
 	}
 
-	c.cache.Add(*areaURL, data)
 	return areaResp, nil
 }

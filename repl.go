@@ -13,6 +13,7 @@ type Config struct {
 	pokeapiClient pokeapi.Client
 	next          *string
 	previous      *string
+	difficulty    string
 }
 
 func startRepl(cfg *Config) {
@@ -76,6 +77,26 @@ func getCommands() map[string]cliCommand {
 			name:        "explore",
 			description: "Explore the area",
 			callback:    commandExplore,
+		},
+		"catch": {
+			name:        "catch",
+			description: "Try to catch the Pokemon",
+			callback:    commandCatch,
+		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspect a Pokemon from your pokedex",
+			callback:    commandInspect,
+		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "Show Pokedex",
+			callback:    commandPokedex,
+		},
+		"difficulty": {
+			name:        "difficulty",
+			description: "Select difficulty. Options: easy - medium - hard. Default is easy.",
+			callback:    commandDifficulty,
 		},
 		"exit": {
 			name:        "exit",
